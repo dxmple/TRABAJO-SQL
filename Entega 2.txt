@@ -1,0 +1,147 @@
+INSERT INTO categoria (id_categoria, nombre)
+VALUES (3, 'fantasia');
+
+INSERT INTO categoria (id_categoria, nombre)
+VALUES (4, 'Biografia');
+
+INSERT INTO autor (id_autor, nombre, nacionalidad)
+VALUES (3, 'J. K. Rowling', 'BRITÁNICA');
+
+INSERT INTO autor (id_autor, nombre, nacionalidad)
+VALUES (4, 'Walter Isaacson', 'AMERICANO');
+
+INSERT INTO libros (id_libro, titulo, id_autor, id_categoria, ano_publicacion)
+VALUES (3, 'Harry Potter y la Piedra Filosofal', 3, 3, 1997);
+
+INSERT INTO libros (id_libro, titulo, id_autor, id_categoria, ano_publicacion)
+VALUES (4, 'Steve Jobs', 4, 4, 2011);
+
+
+
+INSERT INTO socio (id_socio, nombre, direccion, telefono)
+VALUES (3, 'María López', 'Av. Primavera 456', 987111222);
+
+INSERT INTO socio (id_socio, nombre, direccion, telefono)
+VALUES (4, 'Carlos Rivas', 'Jr. Los Cedros 789', 954333221);
+
+INSERT INTO prestamo (id_prestamo, id_libro, id_socio, fecha_prestamo, fecha_devolucion)
+VALUES (3, 3, 3, TO_DATE('2025-11-15','YYYY-MM-DD'), NULL);
+
+INSERT INTO prestamo (id_prestamo, id_libro, id_socio, fecha_prestamo, fecha_devolucion)
+VALUES (4, 4, 4, TO_DATE('2025-11-16','YYYY-MM-DD'), TO_DATE('2025-11-22','YYYY-MM-DD'));
+
+/* Actualización de datos */
+
+UPDATE SOCIO
+SET direccion = 'San Juan de lurigancho'
+WHERE id_socio = 3;
+
+UPDATE libros
+SET titulo = 'Harry Potter y la camara Secreta '
+WHERE id_libro = 3;
+
+UPDATE prestamo
+SET fecha_devolucion = TO_DATE('2025-11-25', 'YYYY-MM-DD')
+WHERE id_prestamo = 3;
+
+
+DELETE FROM prestamo
+WHERE id_socio = 1;
+
+DELETE FROM socio
+WHERE id_socio = 1;
+
+DELETE FROM libros
+WHERE id_libro = 1;
+
+
+
+Restricciones:
+
+
+SELECT
+    uc.table_name AS tabla,
+    ucc.column_name AS columna,
+    uc.constraint_name AS restriccion
+FROM user_constraints uc
+JOIN user_cons_columns ucc 
+ON uc.constraint_name = ucc.constraint_name
+WHERE uc.constraint_type = 'P'
+ORDER BY uc.table_name;
+
+
+SELECT 
+    uc.table_name AS tabla,
+    ucc.column_name AS columna,
+    uc.constraint_name AS restriccion,
+    uc.r_constraint_name AS referencia
+FROM user_constraints uc
+JOIN user_cons_columns ucc 
+ON uc.constraint_name = ucc.constraint_name
+WHERE uc.constraint_type = 'R'
+ORDER BY uc.table_name;
+
+
+ALTER TABLE categoria
+ADD CONSTRAINT uq_categoria_nombre UNIQUE (nombre);
+
+ALTER TABLE socio
+ADD CONSTRAINT uq_socio_telefono UNIQUE (telefono);
+
+ALTER TABLE libros
+ADD CONSTRAINT uq_libro_titulo UNIQUE (titulo);
+
+ALTER TABLE socio
+ADD CONSTRAINT ck_telefono CHECK (REGEXP_LIKE(telefono, '^[0-9]{9}$'));
+
+ALTER TABLE prestamo
+ADD CONSTRAINT ck_prestamo_fecha
+CHECK (fecha_devolucion > fecha_prestamo);
+
+ALTER TABLE LIBROS
+ADD CONSTRAINT chk_libro_no_desconocido
+CHECK (LOWER(titulo) <> 'desconocido');
+
+CRUD:
+
+
+CREATE OR REPLACE PROCEDURE insertar_libro(
+  p_id_libro IN NUMBER,
+  p_titulo IN VARCHAR2,
+  p_autor IN VARCHAR2,
+  p_ano IN NUMBER,
+  p_id_categoria IN NUMBER,
+  p_id_autor IN NUMBER
+) AS
+BEGIN
+  INSERT INTO LIBROS(ID_LIBRO, TITULO, AUTOR, ANO_PUBLICACION, ID_CATEGORIA, ID_AUTOR)
+  VALUES (p_id_libro, p_titulo, p_autor, p_ano, p_id_categoria, p_id_autor);
+  COMMIT;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE actualizar_libro(
+  p_id_libro IN NUMBER,
+  p_titulo IN VARCHAR2
+) AS
+BEGIN
+  UPDATE LIBROS
+  SET TITULO = p_titulo
+  WHERE ID_LIBRO = p_id_libro;
+  COMMIT;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE eliminar_libro(
+  p_id_libro IN NUMBER
+) AS
+BEGIN
+  DELETE FROM LIBROS
+  WHERE ID_LIBRO = p_id_libro;
+  COMMIT;
+END;
+/
+
+EXEC insertar_libro(10, 'A puerta cerrada', 'Jean-Paul Sartre', 1944, 1, 5);
+
+EXEC actualizar_libro(10, 'A puerta cerrada (Edición Especial)');
